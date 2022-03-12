@@ -1239,16 +1239,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
+
+    // Blackcoin: limit dust
     int dust_tx_count = 0;
     CAmount min_dust = 100000;
 
     BOOST_FOREACH (const CTxOut& txout, tx.vout) {
         // LogPrintf("tx_out value %d, minimum value %d dust count %d", txout.nValue, min_dust, dust_tx_count);
         if (txout.nValue < min_dust)
-            dust_tx_count = dust_tx_count + 1;
+            dust_tx_count++;
         if (dust_tx_count > 10)
-            return state.DoS(0, false, REJECT_DUST, "too many dust vouts");
-
+            return state.DoS(0, false, REJECT_INVALID, "too many dust vouts");
     }
 
     if (!CheckTransaction(tx, state))
@@ -1366,6 +1367,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
+
+        if (nFees < GetMinFee(tx, tx.nTime ? tx.nTime : GetAdjustedTime()))
+            return state.Invalid(false, REJECT_INSUFFICIENTFEE, "fee is below minimum");
+
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
         CAmount nModifiedFees = nFees;
         double nPriorityDummy = 0;
@@ -3820,6 +3825,27 @@ bool SignBlock(CBlock& block, CWallet& wallet, int64_t& nFees)
     }
 
     return false;
+}
+
+// Blackcoin: GetMinFee
+CAmount GetMinFee(const CTransaction& tx, unsigned int nTimeTx)
+{
+    size_t nBytes = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    return GetMinFee(nBytes, nTimeTx);
+}
+
+CAmount GetMinFee(size_t nBytes, uint32_t nTime)
+{
+    CAmount nMinFee;
+
+    if (Params().GetConsensus().IsProtocolV3_1_2(nTime))
+        nMinFee = (1 + (CAmount)nBytes / 1000) * MIN_TX_FEE;
+    else
+        nMinFee = MIN_TX_FEE;
+
+    if (!MoneyRange(nMinFee))
+        nMinFee = MAX_MONEY;
+    return nMinFee;
 }
 
 static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex=NULL, bool fProofOfStake=true)

@@ -505,10 +505,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+        nPayFee = GetMinFee(nBytes, GetAdjustedTime());
         if (nPayFee > 0 && coinControl->nMinimumTotalFee > nPayFee)
             nPayFee = coinControl->nMinimumTotalFee;
-
 
         // Allow free? (require at least hard-coded threshold and default to that if no estimate)
         double mempoolEstimatePriority = mempool.estimateSmartPriority(nTxConfirmTarget);
@@ -594,12 +593,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     QString toolTipDust = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
-    double dFeeVary;
-    if (payTxFee.GetFeePerK() > 0)
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), payTxFee.GetFeePerK()) / 1000;
-    else {
-        dFeeVary = (double)std::max(CWallet::GetRequiredFee(1000), mempool.estimateSmartFee(nTxConfirmTarget).GetFeePerK()) / 1000;
-    }
+    double dFeeVary = (nBytes != 0) ? (double)nPayFee / nBytes : 0;
+
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
     l3->setToolTip(toolTip4);

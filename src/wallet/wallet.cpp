@@ -2576,8 +2576,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, coinControl);
 
-            nFeeRet = 0;
-            // Start with no fee and loop until there is enough fee
+            nFeeRet = MIN_TX_FEE;
+            // Start with MIN_TX_FEE and loop until there is enough fee
             while (true)
             {
                 nChangePosInOut = nChangePosRequest;
@@ -2793,11 +2793,12 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         break;
                 }
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+                CAmount nFeeNeeded = GetMinFee(nBytes, txNew.nVersion < 2 ? txNew.nTime : Params().GetConsensus().nProtocolV3_1_2Time);
+
                 if (coinControl && nFeeNeeded > 0 && coinControl->nMinimumTotalFee > nFeeNeeded) {
                     nFeeNeeded = coinControl->nMinimumTotalFee;
                 }
-                if (coinControl && coinControl->fOverrideFeeRate)
+                if (coinControl && coinControl->fOverrideFeeRate && coinControl->nFeeRate.GetFee(nBytes) > nFeeNeeded)
                     nFeeNeeded = coinControl->nFeeRate.GetFee(nBytes);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
@@ -2903,28 +2904,6 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB & pw
 CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
 {
     return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
-}
-
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool)
-{
-    // payTxFee is user-set "I want to pay this much"
-    CAmount nFeeNeeded = payTxFee.GetFee(nTxBytes);
-    // User didn't set: use -txconfirmtarget to estimate...
-    if (nFeeNeeded == 0) {
-        int estimateFoundTarget = nConfirmTarget;
-        nFeeNeeded = pool.estimateSmartFee(nConfirmTarget, &estimateFoundTarget).GetFee(nTxBytes);
-        // ... unless we don't have enough mempool data for estimatefee, then use fallbackFee
-        if (nFeeNeeded == 0)
-            nFeeNeeded = fallbackFee.GetFee(nTxBytes);
-    }
-    // prevent user from paying a fee below minRelayTxFee or minTxFee
-    nFeeNeeded = std::max(nFeeNeeded, GetRequiredFee(nTxBytes));
-    // But always obey the maximum
-    if (nFeeNeeded > maxTxFee)
-        nFeeNeeded = maxTxFee;
-    if(nFeeNeeded < DEFAULT_TRANSACTION_FEE)
-    	nFeeNeeded = DEFAULT_TRANSACTION_FEE;
-    return nFeeNeeded;
 }
 
 

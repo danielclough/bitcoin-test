@@ -1246,7 +1246,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         // LogPrintf("tx_out value %d, minimum value %d dust count %d", txout.nValue, min_dust, dust_tx_count);
         if (txout.nValue < min_dust)
             dust_tx_count = dust_tx_count + 1;
-        if (dust_tx_count > 2)
+        if (dust_tx_count > 10)
             return state.DoS(0, false, REJECT_DUST, "too many dust vouts");
 
     }
@@ -1266,7 +1266,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     // sure that such transactions will be mined (unless we're on
     // -testnet/-regtest).
     const CChainParams& chainparams = Params();
-    if (fRequireStandard && tx.nVersion >= 2 && !chainparams.GetConsensus().IsProtocolV3_1(tx.nTime)) {
+    if (fRequireStandard && tx.nVersion >= 2 && !chainparams.GetConsensus().IsProtocolV3_1_1(tx.nTime ? tx.nTime : GetAdjustedTime())) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
     }
 
@@ -1282,7 +1282,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
     // For the same reasons as in the case with non-final transactions
-    if (tx.nTime > FutureDrift(GetAdjustedTime())) {
+    if (tx.nTime ? tx.nTime : GetAdjustedTime() > FutureDrift(GetAdjustedTime())) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "time-too-new");
     }
 
@@ -2039,7 +2039,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
 
             // Check transaction timestamp
-            if (coins->nTime > tx.nTime)
+            if (coins->nTime > tx.nTime ? tx.nTime : GetAdjustedTime())
                     return state.DoS(100, error("CheckInputs() : transaction timestamp earlier than input transaction"),
                                 REJECT_INVALID, "bad-txns-time-earlier-than-input");
 
@@ -2442,7 +2442,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                   error("ConnectBlock(): tried to stake at depth %d", pindex->nHeight - coins->nHeight),
                     REJECT_INVALID, "bad-cs-premature");
 
-         if (!CheckStakeKernelHash(pindex->pprev, block.nBits, coins, prevout, block.vtx[1].nTime))
+         if (!CheckStakeKernelHash(pindex->pprev, block.nBits, coins, prevout, block.vtx[1].nTime ? block.vtx[1].nTime : block.nTime))
               return state.DoS(100, error("ConnectBlock(): proof-of-stake hash doesn't match nBits"),
                                  REJECT_INVALID, "bad-cs-proofhash");
     }
@@ -3621,7 +3621,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
         // check transaction timestamp
         if (block.GetBlockTime() < (int64_t)tx.nTime)
-           return state.DoS(100, false, REJECT_INVALID, "bad-tx-time", false, "block timestamp earlier than transaction timestamp");
+            return state.DoS(100, false, REJECT_INVALID, "bad-tx-time", false, "block timestamp earlier than transaction timestamp");
     }
 
     unsigned int nSigOps = 0;
@@ -3737,7 +3737,7 @@ bool CheckStake(CBlock* pblock, CWallet& wallet, const CChainParams& chainparams
 
     CValidationState state;
     // verify hash target and signature of coinstake tx
-    if (!CheckProofOfStake(mapBlockIndex[pblock->hashPrevBlock], pblock->vtx[1], pblock->nBits, state))
+    if (!CheckProofOfStake(mapBlockIndex[pblock->hashPrevBlock], pblock->vtx[1], pblock->nBits, state, pblock->vtx[1].nTime ? pblock->vtx[1].nTime : pblock->nTime))
         return error("CheckStake() : proof-of-stake checking failed");
 
     //// debug print

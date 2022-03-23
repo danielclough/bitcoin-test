@@ -2044,7 +2044,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
 
             // Check transaction timestamp
-            if (coins->nTime > tx.nTime ? tx.nTime : GetAdjustedTime())
+            if (coins->nTime > (tx.nTime ? tx.nTime : GetAdjustedTime()))
                     return state.DoS(100, error("CheckInputs() : transaction timestamp earlier than input transaction"),
                                 REJECT_INVALID, "bad-txns-time-earlier-than-input");
 

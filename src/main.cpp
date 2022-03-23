@@ -1283,7 +1283,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
     // For the same reasons as in the case with non-final transactions
-    if (tx.nTime ? tx.nTime : GetAdjustedTime() > FutureDrift(GetAdjustedTime())) {
+    if ((tx.nTime ? tx.nTime : GetAdjustedTime()) > FutureDrift(GetAdjustedTime())) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "time-too-new");
     }
 

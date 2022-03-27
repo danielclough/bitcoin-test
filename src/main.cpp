@@ -3841,7 +3841,7 @@ CAmount GetMinFee(size_t nBytes, uint32_t nTime)
     if (Params().GetConsensus().IsProtocolV3_1_2(nTime))
         nMinFee = (1 + (CAmount)nBytes / 1000) * MIN_TX_FEE;
     else
-        nMinFee = MIN_TX_FEE;
+        nMinFee = ::minRelayTxFee.GetFee(nBytes);
 
     if (!MoneyRange(nMinFee))
         nMinFee = MAX_MONEY;

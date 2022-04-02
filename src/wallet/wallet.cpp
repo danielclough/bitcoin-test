@@ -2622,8 +2622,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, coinControl);
 
-            nFeeRet = 0;
-            // Start with 0 and loop until there is enough fee
+            nFeeRet = MIN_TX_FEE;
+            // Start with MIN_TX_FEE and loop until there is enough fee
             while (true)
             {
                 nChangePosInOut = nChangePosRequest;

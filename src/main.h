@@ -51,9 +51,8 @@ struct LockPoints;
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
 static const bool DEFAULT_WHITELISTFORCERELAY = true;
-/** Minimum fees for transactions */
-static const unsigned int MIN_TX_FEE = 0.001 * COIN;
-static const unsigned int MIN_TX_FEE_PER_KB = 10000;
+/** Minimum fee for transactions */
+static const unsigned int PERKB_TX_FEE = 10000;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 10000;
 //! -maxtxfee default

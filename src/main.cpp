@@ -3839,7 +3839,7 @@ CAmount GetMinFee(size_t nBytes, uint32_t nTime)
     CAmount nMinFee;
 
     if (Params().GetConsensus().IsProtocolV3_1_2(nTime))
-        nMinFee = std::max((CAmount)nBytes / 1000) * MIN_TX_FEE_PER_KB, MIN_TX_FEE);
+        nMinFee = (1 + (CAmount)nBytes / 1000) * MIN_TX_FEE;
     else
         nMinFee = ::minRelayTxFee.GetFee(nBytes);
 

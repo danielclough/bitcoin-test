@@ -69,9 +69,9 @@ bool CheckStakeBlockTimestamp(int64_t nTimeBlock)
 //   quantities so as to generate blocks faster, degrading the system back into
 //   a proof-of-work situation.
 //
-bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, const CCoins* txPrev, const COutPoint& prevout, unsigned int nTimeTx, bool fPrintProofOfStake)
+bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, uint32_t blockFromTime, const CCoins* txPrev, const COutPoint& prevout, unsigned int nTimeTx, bool fPrintProofOfStake)
 {
-    if (nTimeTx < txPrev->nTime)  // Transaction timestamp violation
+    if (nTimeTx < (txPrev->nTime ? txPrev->nTime : blockFromTime))  // Transaction timestamp violation
         return error("CheckStakeKernelHash() : nTime violation");
 
     // Base target
@@ -90,7 +90,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, con
     // Calculate hash
     CHashWriter ss(SER_GETHASH, 0);
     ss << nStakeModifier;
-    ss << txPrev->nTime << prevout.hash << prevout.n << nTimeTx;
+    ss << (txPrev->nTime ? txPrev->nTime : blockFromTime) << prevout.hash << prevout.n << nTimeTx;
 
     uint256 hashProofOfStake = ss.GetHash();
 
@@ -98,7 +98,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, con
     {
         LogPrintf("CheckStakeKernelHash() : nStakeModifier=%s, txPrev.nTime=%u, txPrev.vout.hash=%s, txPrev.vout.n=%u, nTime=%u, hashProof=%s\n",
             nStakeModifier.GetHex().c_str(),
-            txPrev->nTime, prevout.hash.ToString(), prevout.n, nTimeTx,
+            (txPrev->nTime ? txPrev->nTime : blockFromTime), prevout.hash.ToString(), prevout.n, nTimeTx,
             hashProofOfStake.ToString());
     }
 
@@ -110,7 +110,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits, con
     {
         LogPrintf("CheckStakeKernelHash() : nStakeModifier=%s, txPrev.nTime=%u, txPrev.vout.hash=%s, txPrev.vout.n=%u, nTime=%u, hashProof=%s\n",
             nStakeModifier.GetHex().c_str(),
-            txPrev->nTime, prevout.hash.ToString(), prevout.n, nTimeTx,
+           (txPrev->nTime ? txPrev->nTime : blockFromTime), prevout.hash.ToString(), prevout.n, nTimeTx,
             hashProofOfStake.ToString());
     }
 
@@ -148,7 +148,8 @@ bool CheckProofOfStake(CBlockIndex* pindexPrev, const CTransaction& tx, unsigned
         return state.DoS(100, error("CheckProofOfStake() : stake prevout is not mature, expecting %i and only matured to %i", Params().GetConsensus().nCoinbaseMaturity, pindexPrev->nHeight + 1 - mapBlockIndex[hashBlock]->nHeight));
     }
 
-    if (!CheckStakeKernelHash(pindexPrev, nBits, new CCoins(txPrev, pindexPrev->nHeight), txin.prevout, nTimeTx, fDebug))
+    CBlockIndex* pblockindex = mapBlockIndex[hashBlock];
+    if (!CheckStakeKernelHash(pindexPrev, nBits, (txPrev->nTime ? txPrev->nTime : pblockindex.GetBlockTime()), new CCoins(txPrev, pindexPrev->nHeight), txin.prevout, nTimeTx, fDebug))
        return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s", tx.GetHash().ToString())); // may occur during initial download or if behind on block chain sync
 
     return true;
@@ -200,7 +201,8 @@ bool CheckKernel(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t nTime, co
         //Using a pointer in this context is not needed, but is required by the function. 
         //Must ensure coins is deleted to prevent memory leak. 
         CCoins* coins = new CCoins(txPrev, pindexPrev->nHeight);
-        bool result = CheckStakeKernelHash(pindexPrev, nBits, coins, prevout, nTime);
+        CBlockIndex* pblockindex = mapBlockIndex[hashBlock];
+        bool result = CheckStakeKernelHash(pindexPrev, nBits, (txPrev->nTime ? txPrev->nTime : pblockindex.GetBlockTime()), coins, prevout, nTime);
         delete coins;
 
         return result;
@@ -208,7 +210,7 @@ bool CheckKernel(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t nTime, co
         //found in cache
         const CStakeCache& stake = it->second;
         /*
-        if (CheckStakeKernelHash(pindexPrev, nBits, new CCoins(stake.txPrev, pindexPrev->nHeight), prevout, nTime)) {
+        if (CheckStakeKernelHash(pindexPrev, nBits, stake.blockFromTime, new CCoins(stake.txPrev, pindexPrev->nHeight), prevout, nTime)) {
             // Cache could potentially cause false positive stakes in the event of deep reorgs, so check without cache also
             return CheckKernel(pindexPrev, nBits, nTime, prevout);
         }
@@ -218,7 +220,7 @@ bool CheckKernel(CBlockIndex* pindexPrev, unsigned int nBits, uint32_t nTime, co
         //Using a pointer in this context is not needed, but is required by the function.
         //Must ensure coins is deleted to prevent memory leak. 
         CCoins* coins = new CCoins(stake.txPrev, pindexPrev->nHeight);
-        bool result = CheckStakeKernelHash(pindexPrev, nBits, coins, prevout, nTime);
+        bool result = CheckStakeKernelHash(pindexPrev, nBits, (stake.txPrev->nTime ? stake.txPrev->nTime : pblockindex.GetBlockTime()), coins, prevout, nTime);
         delete coins;
 
         return result;
@@ -247,6 +249,7 @@ void CacheKernel(std::map<COutPoint, CStakeCache>& cache, const COutPoint& prevo
         return;
     }
 
-    CStakeCache c(hashBlock, txPrev);
+    CBlockIndex* pblockindex = mapBlockIndex[hashBlock];
+    CStakeCache c(pblockindex->GetBlockTime(), txPrev);
     cache.insert({prevout, c});
 }

@@ -2434,6 +2434,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                         REJECT_INVALID, "bad-diffbits");
 
     // Check proof-of-stake
+    if (block.IsProofOfStake() && chainparams.GetConsensus().IsProtocolV3(block.GetBlockTime()) && !CheckProofOfStake(pindex->pprev, *block.vtx[1], block.nBits, state, block.vtx[1].nTime ? block.vtx[1].nTime : block.nTime)) {
+        LogPrintf("ConnectBlock(): WARNING: %s: check proof-of-stake failed for block %s\n", __func__, block.GetHash().ToString());
+        return false; // do not error here as we expect this during initial block download
+    }
+
+    // Check proof-of-stake
+    /*
     if (block.IsProofOfStake() && chainparams.GetConsensus().IsProtocolV3(block.GetBlockTime())) {
          const COutPoint &prevout = block.vtx[1].vin[0].prevout;
          const CCoins *coins = view.AccessCoins(prevout.hash);
@@ -2451,6 +2458,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
               return state.DoS(100, error("ConnectBlock(): proof-of-stake hash doesn't match nBits"),
                                  REJECT_INVALID, "bad-cs-proofhash");
     }
+    */
 
     bool fScriptChecks = true;
     if (fCheckpointsEnabled) {

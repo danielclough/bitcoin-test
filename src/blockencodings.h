@@ -141,10 +141,10 @@ private:
 protected:
     std::vector<uint64_t> shorttxids;
     std::vector<PrefilledTransaction> prefilledtxn;
-    std::vector<unsigned char> vchBlockSig;
 
 public:
     CBlockHeader header;
+    std::vector<unsigned char> vchBlockSig;
 
     // Dummy for deserialization
     CBlockHeaderAndShortTxIDs() {}
@@ -161,7 +161,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(header);
         READWRITE(nonce);
-
+        READWRITE(vchBlockSig);
         uint64_t shorttxids_size = (uint64_t)shorttxids.size();
         READWRITE(COMPACTSIZE(shorttxids_size));
         if (ser_action.ForRead()) {
@@ -189,8 +189,6 @@ public:
 
         if (ser_action.ForRead())
             FillShortTxIDSelector();
-        
-        READWRITE(vchBlockSig);
     }
 };
 
@@ -201,6 +199,7 @@ protected:
     CTxMemPool* pool;
 public:
     CBlockHeader header;
+    std::vector<unsigned char> vchBlockSig;
     PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock);

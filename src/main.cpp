@@ -1345,7 +1345,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
 
-        if (nFees < GetMinFee(tx, tx.nTime ? tx.nTime : GetAdjustedTime()))
+        // Blackcoin: Minimum fee check
+        if (chainparams.GetConsensus().IsProtocolV3_1_2(tx.nTime ? tx.nTime : GetAdjustedTime()) && nFees < GetMinFee(tx, tx.nTime ? tx.nTime : GetAdjustedTime()))
             return state.Invalid(false, REJECT_INSUFFICIENTFEE, "fee is below minimum");
 
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
@@ -3825,8 +3826,11 @@ CAmount GetMinFee(size_t nBytes, uint32_t nTime)
 
     if (Params().GetConsensus().IsProtocolV3_1_2(nTime))
         nMinFee = (1 + (CAmount)nBytes / 1000) * MIN_TX_FEE_PER_KB;
-    else
+    else {
         nMinFee = ::minRelayTxFee.GetFee(nBytes);
+        if (nMinFee < DEFAULT_TRANSACTION_FEE)
+    	    nMinFee = DEFAULT_TRANSACTION_FEE;
+    }
 
     if (!MoneyRange(nMinFee))
         nMinFee = MAX_MONEY;

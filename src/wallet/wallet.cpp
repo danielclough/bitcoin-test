@@ -2837,7 +2837,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         break;
                 }
 
-                CAmount nFeeNeeded = GetMinFee(nBytes, txNew.nVersion < 2 ? txNew.nTime : Params().GetConsensus().nProtocolV3_1_2Time);
+                CAmount nFeeNeeded = GetMinFee(nBytes, txNew.nTime);
 
                 if (coinControl && nFeeNeeded > 0 && coinControl->nMinimumTotalFee > nFeeNeeded) {
                     nFeeNeeded = coinControl->nMinimumTotalFee;

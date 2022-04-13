@@ -1997,7 +1997,8 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
 }
 
 namespace Consensus {
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, unsigned int nTimeTx)
+struct Params;
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, const Consensus::Params& params, unsigned int nTimeTx)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
@@ -2014,7 +2015,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
             // If prev is coinbase or coinstake, check that it's matured
             if (coins->IsCoinBase() || coins->IsCoinStake()) {
-                     if (nSpendHeight - coins->nHeight < Params().nCoinbaseMaturity)
+                     if (nSpendHeight - coins->nHeight < params.nCoinbaseMaturity)
                              return state.Invalid(
                                     error("CheckInputs(): tried to spend %s at depth %d", coins->IsCoinBase() ? "coinbase" : "coinstake", nSpendHeight - coins->nHeight),
                                     REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
@@ -2035,25 +2036,25 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
         if (!tx.IsCoinStake())
         {
-                    if (nValueIn < tx.GetValueOut())
-                        return state.DoS(100, error("CheckInputs(): %s value in (%s) < value out (%s)",
-                                                    tx.GetHash().ToString(), FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())),
-                                         REJECT_INVALID, "bad-txns-in-belowout");
+            if (nValueIn < tx.GetValueOut())
+                return state.DoS(100, error("CheckInputs(): %s value in (%s) < value out (%s)",
+                                            tx.GetHash().ToString(), FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())),
+                                    REJECT_INVALID, "bad-txns-in-belowout");
 
-                    // Tally transaction fees
-                    CAmount nTxFee = nValueIn - tx.GetValueOut();
-                    if (nTxFee < 0)
-                        return state.DoS(100, error("CheckInputs(): %s nTxFee < 0", tx.GetHash().ToString()),
-                                         REJECT_INVALID, "bad-txns-fee-negative");
-                    nFees += nTxFee;
-                    if (!MoneyRange(nFees))
-                        return state.DoS(100, error("CheckInputs(): nFees out of range"),
-                                         REJECT_INVALID, "bad-txns-fee-outofrange");
+            // Tally transaction fees
+            CAmount nTxFee = nValueIn - tx.GetValueOut();
+            if (nTxFee < 0)
+                return state.DoS(100, error("CheckInputs(): %s nTxFee < 0", tx.GetHash().ToString()),
+                                    REJECT_INVALID, "bad-txns-fee-negative");
+            nFees += nTxFee;
+            if (!MoneyRange(nFees))
+                return state.DoS(100, error("CheckInputs(): nFees out of range"),
+                                    REJECT_INVALID, "bad-txns-fee-outofrange");
 
-                    // Blackcoin: Minimum fee check
-                    if (Params().IsProtocolV3_1_2(nTimeTx) && nFees < GetMinFee(tx, nTimeTx))
-                        return state.DoS(100, error("CheckInputs(): nFees below minimum"),
-                                         REJECT_INVALID, "bad-txns-fee-not-enough");
+            // Blackcoin: Minimum fee check
+            if (params.IsProtocolV3_1_2(nTimeTx) && nFees < GetMinFee(tx, nTimeTx))
+                return state.DoS(100, error("CheckInputs(): nFees below minimum"),
+                                    REJECT_INVALID, "bad-txns-fee-not-enough");
         }
     return true;
 }
@@ -2063,7 +2064,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 {
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), tx.nTime ? tx.nTime : GetAdjustedTime()))
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), Params().GetConsensus(), tx.nTime ? tx.nTime : GetAdjustedTime()))
             return false;
 
         if (pvChecks)

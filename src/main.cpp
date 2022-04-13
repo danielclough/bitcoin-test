@@ -1997,7 +1997,7 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
 }
 
 namespace Consensus {
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, unsigned int nTimeTx)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
@@ -2049,6 +2049,11 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
                     if (!MoneyRange(nFees))
                         return state.DoS(100, error("CheckInputs(): nFees out of range"),
                                          REJECT_INVALID, "bad-txns-fee-outofrange");
+
+                    // Blackcoin: Minimum fee check
+                    if (Params().IsProtocolV3_1_2(nTimeTx) && nFees < GetMinFee(tx, nTimeTx))
+                        return state.DoS(100, error("CheckInputs(): nFees below minimum"),
+                                         REJECT_INVALID, "bad-txns-fee-not-enough");
         }
     return true;
 }
@@ -2058,7 +2063,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 {
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), tx.nTime ? tx.nTime : GetAdjustedTime()))
             return false;
 
         if (pvChecks)

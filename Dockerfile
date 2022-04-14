@@ -78,11 +78,3 @@ RUN git clone -b ${BRANCH} https://${HUBLAB}.com/${GITNAME}/${GITREPO}.git && \
   for i in `ldd /usr/bin/jq | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /bin/echo --parents ./ && \
   for i in `ldd /bin/echo | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done
-
-#
-# Build minimal package
-#
-# minimal (only package binaries and scripts)
-minimal="danielclough/blackcoin-more-minimal-linux-X87:test"
-tar -c . | docker import - ${minimal}
-docker image push ${minimal}

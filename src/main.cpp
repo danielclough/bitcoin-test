@@ -1244,7 +1244,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     // sure that such transactions will be mined (unless we're on
     // -testnet/-regtest).
     const CChainParams& chainparams = Params();
-    if (fRequireStandard && tx.nVersion >= 2 && !chainparams.GetConsensus().IsProtocolV3_1_1(tx.nTime ? tx.nTime : GetAdjustedTime())) {
+    if (fRequireStandard && tx.nVersion >= 2 && !chainparams.GetConsensus().IsProtocolV3_1(tx.nTime ? tx.nTime : GetAdjustedTime())) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
     }
 
@@ -1346,7 +1346,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         CAmount nFees = nValueIn-nValueOut;
 
         // Blackcoin: Minimum fee check
-        if (chainparams.GetConsensus().IsProtocolV3_1_2(tx.nTime ? tx.nTime : GetAdjustedTime()) && nFees < GetMinFee(tx, tx.nTime ? tx.nTime : GetAdjustedTime()))
+        if (chainparams.GetConsensus().IsProtocolV3_1(tx.nTime ? tx.nTime : GetAdjustedTime()) && nFees < GetMinFee(tx, tx.nTime ? tx.nTime : GetAdjustedTime()))
             return state.Invalid(false, REJECT_INSUFFICIENTFEE, "fee is below minimum");
 
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
@@ -2015,7 +2015,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
             // If prev is coinbase or coinstake, check that it's matured
             if (coins->IsCoinBase() || coins->IsCoinStake()) {
-                if (nSpendHeight - coins->nHeight < (params.IsProtocolV3_1_2(nTimeTx) ? params.nCoinbaseMaturity : Params().nCoinbaseMaturity))
+                if (nSpendHeight - coins->nHeight < (params.IsProtocolV3_1(nTimeTx) ? params.nCoinbaseMaturity : Params().nCoinbaseMaturity))
                         return state.Invalid(
                             error("CheckInputs(): tried to spend %s at depth %d", coins->IsCoinBase() ? "coinbase" : "coinstake", nSpendHeight - coins->nHeight),
                             REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
@@ -2052,7 +2052,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
                                     REJECT_INVALID, "bad-txns-fee-outofrange");
 
             // Blackcoin: Minimum fee check
-            if (params.IsProtocolV3_1_2(nTimeTx) && nFees < GetMinFee(tx, nTimeTx))
+            if (params.IsProtocolV3_1(nTimeTx) && nFees < GetMinFee(tx, nTimeTx))
                 return state.DoS(100, error("CheckInputs(): nFees below minimum"),
                                     REJECT_INVALID, "bad-txns-fee-not-enough");
         }
@@ -3830,7 +3830,7 @@ CAmount GetMinFee(size_t nBytes, uint32_t nTime)
 {
     CAmount nMinFee;
 
-    if (Params().GetConsensus().IsProtocolV3_1_2(nTime))
+    if (Params().GetConsensus().IsProtocolV3_1(nTime))
         nMinFee = (1 + (CAmount)nBytes / 1000) * MIN_TX_FEE_PER_KB;
     else {
         nMinFee = ::minRelayTxFee.GetFee(nBytes);

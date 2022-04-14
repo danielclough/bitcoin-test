@@ -2620,7 +2620,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             std::vector<COutput> vAvailableCoins;
             AvailableCoins(vAvailableCoins, true, coinControl);
 
-            nFeeRet = Params().GetConsensus().IsProtocolV3_1_2(txNew.nTime) ? MIN_TX_FEE_PER_KB : 0;
+            nFeeRet = Params().GetConsensus().IsProtocolV3_1(txNew.nTime) ? MIN_TX_FEE_PER_KB : 0;
             // Start with no fee and loop until there is enough fee
             while (true)
             {

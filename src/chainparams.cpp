@@ -112,8 +112,6 @@ public:
         consensus.nProtocolV2Time = 1407053625;
         consensus.nProtocolV3Time = 1444028400;
         consensus.nProtocolV3_1Time = 4102437600;
-        consensus.nProtocolV3_1_1Time = 4102437600;
-        consensus.nProtocolV3_1_2Time = 4102437600;
         consensus.nLastPOWBlock = 10000;
         consensus.nStakeTimestampMask = 0xf; // 15
         consensus.nCoinbaseMaturity = 500;
@@ -210,8 +208,6 @@ public:
         consensus.nProtocolV2Time = 1407053625;
         consensus.nProtocolV3Time = 1444028400;
         consensus.nProtocolV3_1Time = 4102437600;
-        consensus.nProtocolV3_1_1Time = 4102437600;
-        consensus.nProtocolV3_1_2Time = 1649278800;
         consensus.nLastPOWBlock = 0x7fffffff;
         consensus.nStakeTimestampMask = 0xf;
         consensus.nCoinbaseMaturity = 10;
@@ -300,8 +296,6 @@ public:
         consensus.nProtocolV2Time = 1407053625;
         consensus.nProtocolV3Time = 1444028400;
         consensus.nProtocolV3_1Time = 4102437600;
-        consensus.nProtocolV3_1_1Time = 4102437600;
-        consensus.nProtocolV3_1_2Time = 4102437600;
         consensus.nLastPOWBlock = 1000;
         consensus.nStakeTimestampMask = 0xf;
         consensus.nCoinbaseMaturity = 10;

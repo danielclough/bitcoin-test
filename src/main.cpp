@@ -2015,10 +2015,10 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
             // If prev is coinbase or coinstake, check that it's matured
             if (coins->IsCoinBase() || coins->IsCoinStake()) {
-                     if (nSpendHeight - coins->nHeight < params.nCoinbaseMaturity)
-                             return state.Invalid(
-                                    error("CheckInputs(): tried to spend %s at depth %d", coins->IsCoinBase() ? "coinbase" : "coinstake", nSpendHeight - coins->nHeight),
-                                    REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
+                if (nSpendHeight - coins->nHeight < (params.IsProtocolV3_1_2(nTimeTx) ? params.nCoinbaseMaturity : Params().nCoinbaseMaturity))
+                        return state.Invalid(
+                            error("CheckInputs(): tried to spend %s at depth %d", coins->IsCoinBase() ? "coinbase" : "coinstake", nSpendHeight - coins->nHeight),
+                            REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
             }
 
 

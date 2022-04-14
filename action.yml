@@ -1,0 +1,6 @@
+# action.yml
+name: 'Build Minbase'
+description: 'Build Minbase'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

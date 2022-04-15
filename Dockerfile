@@ -33,8 +33,8 @@ COPY . ./
 RUN ( cd depends/db-6.2.38/build_unix && \
       mkdir -p build && \
       BDB_PREFIX=$(pwd)/build && \
-      pwd && \
-      ls -al && \
+      ls .. && \
+      ls ../dist -al && \
       ../dist/configure --disable-shared  -disable-replication --enable-cxx --with-pic  --prefix=${BDB_PREFIX} --with-gui=no --enable-glibc-back-compat --enable-reduce-exports --disable-tests --disable-bench --disable-gui-tests --disable-man && \
       make install && \
       cd /  && ./autogen.sh && \

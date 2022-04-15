@@ -2,7 +2,8 @@ FROM ubuntu
 ARG TZ=America/Los_Angeles
 ARG DEBIAN_FRONTEND=noninteractive
 RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone && \
-      apt-get update && apt-get install -yqq \
+      apt-get update && apt-get install -yqq  --no-install-recommends \
+                      apt-utils \
                           wget \
                           jq \
                           bc \

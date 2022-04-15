@@ -59,10 +59,12 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
   cp /usr/bin/jq --parents ./ && \
   for i in `ldd /usr/bin/jq | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /bin/echo --parents ./ && \
-  for i in `ldd /bin/echo | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done
+  for i in `ldd /bin/echo | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
+  ls -alR
 
 FROM scratch AS minimal
 
 COPY --from=base /parts/usr /usr
 COPY --from=base /parts/bin /bin
 COPY --from=base /parts/lib /lib
+COPY --from=base /parts/lib64/ /lib64

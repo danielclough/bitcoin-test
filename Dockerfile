@@ -29,7 +29,7 @@ RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezo
 #
 # Build Blackcoin More
 #
-RUN (tar -xvf /depends/db-6.2.38.tar.gz && \
+RUN (pwd && ls -al && tar -xvf /depends/db-6.2.38.tar.gz && \
       cd /depends/db-6.2.38/build_unix && \
       mkdir -p build && \
       BDB_PREFIX=$(pwd)/build && \

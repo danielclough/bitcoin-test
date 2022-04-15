@@ -29,8 +29,8 @@ RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezo
 #
 # Build Blackcoin More
 #
-RUN (tar -xvf depends/db-6.2.38.tar.gz && \
-      cd depends/db-6.2.38/build_unix && \
+RUN (tar -xvf /depends/db-6.2.38.tar.gz && \
+      cd /depends/db-6.2.38/build_unix && \
       mkdir -p build && \
       BDB_PREFIX=$(pwd)/build && \
       ../dist/configure --disable-shared  -disable-replication --enable-cxx --with-pic  --prefix=${BDB_PREFIX} --with-gui=no --enable-glibc-back-compat --enable-reduce-exports --disable-tests --disable-bench --disable-gui-tests --disable-man && \

@@ -43,16 +43,6 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
       cd src/ && \
       strip blackmore*) && \
 #
-# Build btcdeb
-#
-  cd / && \
-  git clone https://github.com/bitcoin-core/btcdeb.git && \
-  cd btcdeb && \
-  ./autogen.sh && \
-  ./configure && \
-  make && \
-  strip btcc && \
-#
 # Prepare entrypoint
 #
   cp /contrib/docker/action-entry.sh /usr/local/bin/ && \

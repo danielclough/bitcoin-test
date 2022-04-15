@@ -1,6 +1,11 @@
 FROM ubuntu
 ARG TZ=America/Los_Angeles
+ARG HUBLAB=github
+ARG GITREPO=bitcoin
+ARG GITNAME=lateminer
+ARG BRANCH=blackcoin-more-0.13-dev
 ARG DEBIAN_FRONTEND=noninteractive
+ARG CACHEBUST
 RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone && \
       apt-get update && apt-get install -yqq \
                           wget \
@@ -25,10 +30,12 @@ RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezo
                           libzmq3-dev \
                           libssl-dev \
                           gperf 
+# RUN echo ${CACHEBUST}
 #
 # Build Blackcoin More
 #
-RUN (wget https://distfiles.gentoo.org/distfiles/db-6.2.38.tar.gz && \
+RUN git clone -b ${BRANCH} https://${HUBLAB}.com/${GITNAME}/${GITREPO}.git && \
+      (wget https://distfiles.gentoo.org/distfiles/db-6.2.38.tar.gz && \
       tar -xvf db-6.2.38.tar.gz && \
       cd db-6.2.38/build_unix && \
       mkdir -p build && \
@@ -36,7 +43,7 @@ RUN (wget https://distfiles.gentoo.org/distfiles/db-6.2.38.tar.gz && \
       ../dist/configure --disable-shared  -disable-replication --enable-cxx --with-pic  --prefix=${BDB_PREFIX} --with-gui=no --enable-glibc-back-compat --enable-reduce-exports --disable-tests --disable-bench --disable-gui-tests --disable-man && \
       make install && \
       cd ../.. && \
-      cd /  && ./autogen.sh && \
+      cd ${GITREPO}/  && ./autogen.sh && \
       ./configure CPPFLAGS="-I${BDB_PREFIX}/include/ -O2" LDFLAGS="-L${BDB_PREFIX}/lib/" --disable-tests --disable-bench --enable-reduce-exports && \
       make -j4 && \
       cd src/ && \
@@ -52,17 +59,10 @@ RUN (wget https://distfiles.gentoo.org/distfiles/db-6.2.38.tar.gz && \
   make && \
   strip btcc && \
 #
-# Prepare entrypoint
-#
-  cp /contrib/docker/action-entry.sh /usr/local/bin/ && \
-  chmod u+x /usr/local/bin/action-entry.sh && \
-#
 # Prepare for minimal package
 #
-  cp /contrib/docker/action-entry.sh /usr/local/bin/ && \
-  chmod u+x /usr/local/bin/action-entry.sh && \
-  cp /src/blackmored /usr/local/bin/ && \
-  cp /src/blackmore-cli /usr/local/bin/ && \
+  cp /${GITREPO}/src/blackmored /usr/local/bin/ && \
+  cp /${GITREPO}/src/blackmore-cli /usr/local/bin/ && \
   cp /btcdeb/btcc /usr/local/bin/ && \
   mkdir /parts  && \
   cd  /parts  && \
@@ -80,5 +80,3 @@ RUN (wget https://distfiles.gentoo.org/distfiles/db-6.2.38.tar.gz && \
   for i in `ldd /usr/bin/jq | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /bin/echo --parents ./ && \
   for i in `ldd /bin/echo | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done
-
-ENTRYPOINT ["action-entry.sh"]

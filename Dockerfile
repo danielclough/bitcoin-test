@@ -42,11 +42,6 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
       cd src/ && \
       strip blackmore*) && \
 #
-# Prepare entrypoint
-#
-  cp /contrib/docker/action-entry.sh /usr/local/bin/ && \
-  chmod u+x /usr/local/bin/action-entry.sh && \
-#
 # Prepare for minimal package
 #
   cp /contrib/docker/action-entry.sh /usr/local/bin/ && \
@@ -67,5 +62,3 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
   for i in `ldd /usr/bin/jq | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /bin/echo --parents ./ && \
   for i in `ldd /bin/echo | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done
-
-ENTRYPOINT ["action-entry.sh"]

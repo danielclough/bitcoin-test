@@ -2,8 +2,7 @@ FROM ubuntu
 ARG TZ=America/Los_Angeles
 ARG DEBIAN_FRONTEND=noninteractive
 RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone && \
-      apt-get update && apt-get install -yqq  --no-install-recommends \
-                      apt-utils \
+      apt-get update && apt-get install -yqq \
                           wget \
                           jq \
                           bc \
@@ -54,15 +53,12 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
   chmod u+x /usr/local/bin/action-entry.sh && \
   cp /src/blackmored /usr/local/bin/ && \
   cp /src/blackmore-cli /usr/local/bin/ && \
-  cp /btcdeb/btcc /usr/local/bin/ && \
   mkdir /parts  && \
   cd  /parts  && \
   cp --parents /usr/local/bin/blackmored ./ && \
   for i in `ldd /usr/local/bin/blackmored | grep -v linux-vdso.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp --parents /usr/local/bin/blackmore-cli ./ && \
   for i in `ldd /usr/local/bin/blackmore-cli | grep -v linux-vdso.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
-  cp --parents /usr/local/bin/btcc ./ && \
-  for i in `ldd /usr/local/bin/btcc | grep -v linux-vdso.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /usr/bin/bc --parents ./ && \
   for i in `ldd /usr/bin/bc | grep -v linux-vdso.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /usr/bin/vim --parents ./ && \

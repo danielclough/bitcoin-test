@@ -65,3 +65,4 @@ FROM scratch AS minimal
 
 COPY --from=base /parts/usr /usr
 COPY --from=base /parts/bin /bin
+COPY --from=base /parts/lib /lib

@@ -63,4 +63,5 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
 
 FROM base AS minimal
 
-COPY --from=base /parts /
+COPY --from=base /parts/usr /usr
+COPY --from=base /parts/bin /bin

@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu AS base
 ARG TZ=America/Los_Angeles
 ARG DEBIAN_FRONTEND=noninteractive
 RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone && \
@@ -60,3 +60,7 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
   for i in `ldd /usr/bin/jq | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done && \
   cp /bin/echo --parents ./ && \
   for i in `ldd /bin/echo | grep -v linux-vdso.so.1 | grep -v libjq.so.1 | awk {' if ( $3 == "") print $1; else print $3 '}`; do cp --parents ${i} ./; done
+
+FROM base AS minimal
+
+COPY --from=base /parts /

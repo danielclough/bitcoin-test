@@ -44,8 +44,6 @@ RUN (tar -xvf depends/db-6.2.38.tar.gz && \
 #
 # Prepare for minimal package
 #
-  cp /contrib/docker/action-entry.sh /usr/local/bin/ && \
-  chmod u+x /usr/local/bin/action-entry.sh && \
   cp /src/blackmored /usr/local/bin/ && \
   cp /src/blackmore-cli /usr/local/bin/ && \
   mkdir /parts  && \
